@@ -12,8 +12,6 @@
 
 namespace lcf {
 
-const DBArrayAlloc::size_type DBArrayAlloc::_empty_buf[2] = { 0, 0 };
-
 static ptrdiff_t HeaderSize(size_t align) {
 	return std::max(sizeof(DBArrayAlloc::size_type), align);
 }
@@ -48,8 +46,9 @@ void* DBArrayAlloc::alloc(size_type size, size_type field_size, size_type align)
 
 void DBArrayAlloc::free(void* p, size_type align) noexcept {
 	assert(p != nullptr);
-	if (p != empty_buf()) {
-		auto* raw = Adjust(p, -HeaderSize(align));
+	if (*get_size_ptr(p)!=0) {
+		void* raw = new void*;
+		raw =  Adjust(p, -HeaderSize(align));
 #ifdef LCF_DEBUG_DBARRAY
 		std::cout << "DBArray: Free"
 			<< " align=" << align
@@ -58,7 +57,9 @@ void DBArrayAlloc::free(void* p, size_type align) noexcept {
 			<< " field_size=" << *get_size_ptr(p)
 			<< std::endl;
 #endif
-		::operator delete(raw);
+		delete(raw);
+
+
 	}
 }
 
@@ -71,7 +72,7 @@ char* DBString::construct_z(const char* s, size_t len) {
 }
 
 char* DBString::construct_sv(const char* s, size_t len) {
-	auto* p = alloc(len);
+	char* p = alloc(len);
 	if (len) {
 		std::memcpy(p, s, len);
 		p[len] = '\0';
@@ -80,6 +81,7 @@ char* DBString::construct_sv(const char* s, size_t len) {
 }
 
 DBString& DBString::operator=(const DBString& o) {
+	
 	if (this != &o) {
 		destroy();
 		_storage = construct_z(o.data(), o.size());

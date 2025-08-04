@@ -27,9 +27,8 @@ struct DBArrayAlloc {
 	static void free(void* p, size_type align) noexcept;
 
 	static void* empty_buf() {
-		return const_cast<size_type*>(&_empty_buf[1]);
+		return const_cast<char*> (&_empty_buf);
 	}
-
 	static constexpr size_type* get_size_ptr(void* p) {
 		return static_cast<size_type*>(p) - 1;
 	}
@@ -39,7 +38,7 @@ struct DBArrayAlloc {
 	}
 
 	private:
-	static const size_type _empty_buf[2];
+		static const char _empty_buf = '\0';
 };
 
 } // namespace lcf
